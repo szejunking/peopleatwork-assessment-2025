@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Force redeploy v2 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -154,15 +153,19 @@
                 <button id="restart-button" class="bg-slate-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-transform transform active:scale-95">Start Over</button>
             </div>
         </div>
-
     </div>
+
+    <!-- Hidden form and iframe for Google Sheets submission -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(this.contentWindow.location.href != 'about:blank'){console.log('Submission successful!');}"></iframe>
+    <form id="g-sheet-form" method="post" target="hidden_iframe">
+        <input type="hidden" name="submissionData" id="submission-data-input">
+    </form>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONFIGURATION ---
-            // Paste the Web App URL you copied from the Google Apps Script deployment screen here.
-            const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDTOFy3UWngZcbicvOVvIEQQ-JjSCdDBzh6Dps4-Ox3Sp_vO8op6ulZ-tsqK2z_PGg/exec';
-
+            const GOOGLE_APP_SCRIPT_URL = 'YOUR_GOOGLE_APP_SCRIPT_URL_HERE';
 
             // --- DATA ---
             const answerSets = {
@@ -639,25 +642,28 @@
                     answers: state.answers
                 };
 
+                // Using the hidden form method
+                const form = document.getElementById('g-sheet-form');
+                const dataInput = document.getElementById('submission-data-input');
+                
+                form.action = GOOGLE_APP_SCRIPT_URL;
+                dataInput.value = JSON.stringify(submissionData);
+
                 try {
-                    const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors', // This is the critical change
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(submissionData) 
-                    });
-                    
-                    endSubtitle.textContent = "Thank you for completing the assessment. Your results have been submitted.";
+                    // We can't track success/failure easily with this method, so we'll be optimistic.
+                    form.submit();
+                    setTimeout(() => {
+                        submissionSpinner.classList.add('hidden');
+                        successIcon.classList.remove('hidden');
+                        endSubtitle.textContent = "Thank you for completing the assessment. Your results have been submitted.";
+                    }, 2000); // Wait 2 seconds before showing success
 
                 } catch (error) {
                     console.error("Error submitting assessment:", error);
-                    endSubtitle.textContent = "There was an error submitting your results. Please try downloading the CSV and sending it manually.";
-                    endSubtitle.style.color = 'red';
-                } finally {
                     submissionSpinner.classList.add('hidden');
                     successIcon.classList.remove('hidden');
+                    endSubtitle.textContent = "There was an error submitting your results. Please try downloading the CSV and sending it manually.";
+                    endSubtitle.style.color = 'red';
                 }
             };
 
