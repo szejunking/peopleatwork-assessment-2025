@@ -641,14 +641,11 @@
                 try {
                     const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
                         method: 'POST',
-                        // IMPORTANT: The mode must be 'no-cors' for this type of request to a Google Apps Script.
-                        // However, this prevents us from reading the response.
-                        // We will also use a redirect to handle the response properly.
-                        redirect: 'follow', 
+                        mode: 'no-cors', // This is the critical change
                         headers: {
-                            'Content-Type': 'text/plain;charset=utf-8', // Send as plain text
+                            'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify(submissionData) // The body is still JSON
+                        body: JSON.stringify(submissionData) 
                     });
                     
                     endSubtitle.textContent = "Thank you for completing the assessment. Your results have been submitted.";
