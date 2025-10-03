@@ -123,13 +123,14 @@
         
         <!-- End Screen -->
         <div id="end-view" class="hidden bg-white p-8 rounded-xl shadow-lg text-center transition-opacity duration-300">
-             <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+             <div id="submission-spinner" class="hidden w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+             <div id="submission-success-icon" class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
             <h1 id="end-title" class="text-3xl font-bold text-slate-800 mb-2">Assessment Complete!</h1>
-            <p id="end-subtitle" class="text-slate-600 mb-6">Thank you for completing the assessment. You may now close this window.</p>
+            <p id="end-subtitle" class="text-slate-600 mb-6">Thank you for completing the assessment. Your results have been submitted.</p>
             
             <div id="summary-container" class="mt-8 text-left max-h-[40vh] overflow-y-auto border border-slate-200 rounded-lg">
                 <table class="min-w-full divide-y divide-slate-200">
@@ -157,7 +158,11 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-        const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDTOFy3UWngZcbicvOVvIEQQ-JjSCdDBzh6Dps4-Ox3Sp_vO8op6ulZ-tsqK2z_PGg/exec';    
+            // --- CONFIGURATION ---
+            // Paste the Web App URL you copied from the Google Apps Script deployment screen here.
+            const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDTOFy3UWngZcbicvOVvIEQQ-JjSCdDBzh6Dps4-Ox3Sp_vO8op6ulZ-tsqK2z_PGg/exec';
+
+
             // --- DATA ---
             const answerSets = {
                 '#1#': { en: [{v:0,t:'Never'},{v:1,t:'Seldom'},{v:2,t:'Sometimes'},{v:3,t:'Often'},{v:4,t:'Always'}], bm: [{v:0,t:'Tidak sama sekali'},{v:1,t:'Jarang'},{v:2,t:'Kadang-kadang'},{v:3,t:'Sering'},{v:4,t:'Sentiasa'}], ch: [{v:0,t:'从不'},{v:1,t:'很少'},{v:2,t:'有时'},{v:3,t:'经常'},{v:4,t:'总是'}] },
@@ -274,7 +279,7 @@
                     },
                     2: { 
                         title: "Personality", 
-                        text: `<div class="text-center"><h4><font color="#FF6000">Personality</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 Aim&emsp;</b></font></span> <font size="2">The purpose is to assess the "Big Five" personality traits</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 Time&emsp;</b></font></span> <font size="2">It takes 3 minutes to complete.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ Items&emsp;</b></font></span> <font size="2">There are a total of 10 items.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️Credits&emsp;</b></font></span> <font size="2">Gosling, Rentfrow and Swann (2003) & DeBell and Colleagues (2021)</font></div><br>`
+                        text: `<div class="text-center"><h4><font color="#FF6000">Personality</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 Aim&emsp;</b></font></span> <font size="2">The purpose is to assess the "Big Five" personality traits.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 Time&emsp;</b></font></span> <font size="2">It takes 3 minutes to complete.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ Items&emsp;</b></font></span> <font size="2">There are a total of 10 items.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️Credits&emsp;</b></font></span> <font size="2">Gosling, Rentfrow and Swann (2003) & DeBell and Colleagues (2021)</font></div><br>`
                     },
                     3: { 
                         title: "Self-Esteem", 
@@ -302,7 +307,7 @@
                     },
                     2: { 
                         title: "性格", 
-                        text: `<div class="text-center"><h4><font color="#FF6000">性格</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 目的&emsp;</b></font></span> <font size="2">目的是评估“五大”人格特质</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 时间&emsp;</b></font></span> <font size="2">完成需要3分钟。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ 项目&emsp;</b></font></span> <font size="2">总共有10个项目。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️来源&emsp;</b></font></span> <font size="2">Gosling, Rentfrow and Swann (2003) & DeBell 及其同事 (2021)</font></div><br>`
+                        text: `<div class="text-center"><h4><font color="#FF6000">性格</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 目的&emsp;</b></font></span> <font size="2">目的是评估“五大”人格特质。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 时间&emsp;</b></font></span> <font size="2">完成需要3分钟。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ 项目&emsp;</b></font></span> <font size="2">总共有10个项目。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️来源&emsp;</b></font></span> <font size="2">Gosling, Rentfrow and Swann (2003) & DeBell 及其同事 (2021)</font></div><br>`
                     },
                     3: { 
                         title: "自尊", 
@@ -601,24 +606,81 @@
                 renderView();
             };
 
+            const submitResults = async () => {
+                if (!GOOGLE_APP_SCRIPT_URL || GOOGLE_APP_SCRIPT_URL === 'YOUR_GOOGLE_APP_SCRIPT_URL_HERE') {
+                    console.warn("Google Apps Script URL is not configured. Skipping submission.");
+                    return;
+                }
+
+                const submissionSpinner = document.getElementById('submission-spinner');
+                const successIcon = document.getElementById('submission-success-icon');
+                const endSubtitle = document.getElementById('end-subtitle');
+
+                submissionSpinner.classList.remove('hidden');
+                successIcon.classList.add('hidden');
+                
+                let durationString = 'N/A';
+                if (state.startTime && state.endTime) {
+                    const start = new Date(state.startTime);
+                    const end = new Date(state.endTime);
+                    const diffMs = end - start;
+                    const diffSecs = Math.floor(diffMs / 1000);
+                    const minutes = Math.floor(diffSecs / 60);
+                    const seconds = diffSecs % 60;
+                    durationString = `${minutes} minutes, ${seconds} seconds`;
+                }
+
+                const submissionData = {
+                    email: state.userEmail,
+                    startTime: state.startTime,
+                    endTime: state.endTime,
+                    duration: durationString,
+                    answers: state.answers
+                };
+
+                try {
+                    const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
+                        method: 'POST',
+                        // IMPORTANT: The mode must be 'no-cors' for this type of request to a Google Apps Script.
+                        // However, this prevents us from reading the response.
+                        // We will also use a redirect to handle the response properly.
+                        redirect: 'follow', 
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8', // Send as plain text
+                        },
+                        body: JSON.stringify(submissionData) // The body is still JSON
+                    });
+                    
+                    endSubtitle.textContent = "Thank you for completing the assessment. Your results have been submitted.";
+
+                } catch (error) {
+                    console.error("Error submitting assessment:", error);
+                    endSubtitle.textContent = "There was an error submitting your results. Please try downloading the CSV and sending it manually.";
+                    endSubtitle.style.color = 'red';
+                } finally {
+                    submissionSpinner.classList.add('hidden');
+                    successIcon.classList.remove('hidden');
+                }
+            };
+
             const proceedToNextQuestion = () => {
                 const currentIndex = state.currentQuestionIndex;
                 const currentQuestion = questions[currentIndex];
                 const currentQuestionNumber = currentQuestion.number;
 
-                // Check if the *current* question is the last one in a section
-                if (currentQuestionNumber === SECTION_BREAKS[1] || currentQuestionNumber === SECTION_BREAKS[2]) {
-                    state.currentQuestionIndex++;
-                    const nextSection = getCurrentSection(currentQuestionNumber) + 1;
-                    showInstructions(nextSection);
-                    return;
-                }
-                
                 const nextIndex = currentIndex + 1;
                 if (nextIndex >= questions.length) {
                     state.endTime = new Date().toISOString();
                     state.currentView = 'end';
                     renderView();
+                    submitResults(); 
+                    return;
+                }
+                
+                if (currentQuestionNumber === SECTION_BREAKS[1] || currentQuestionNumber === SECTION_BREAKS[2]) {
+                    state.currentQuestionIndex++;
+                    const nextSection = getCurrentSection(currentQuestionNumber) + 1;
+                    showInstructions(nextSection);
                     return;
                 }
                 
