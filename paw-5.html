@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>People@Work Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .choice-label:has(input[type=radio]:checked),
+        .choice-label:has(input[type=checkbox]:checked) {
+            background-color: #3b82f6; /* bg-blue-500 */
+            color: white;
+            border-color: #2563eb; /* border-blue-600 */
+        }
+        .lang-btn.active {
+            background-color: #3b82f6; /* bg-blue-500 */
+            color: white;
+            font-weight: 600;
+        }
+        /* Custom Slider Styles */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #d1d5db; /* bg-gray-300 */
+            border-radius: 9999px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #3b82f6; /* bg-blue-500 */
+            cursor: pointer;
+            margin-top: -8px; /* Center thumb on track */
+            border: 4px solid white;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.1);
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #d1d5db;
+            border-radius: 9999px;
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 4px solid white;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app" class="w-full max-w-2xl mx-auto">
+        
+        <!-- Language Selector -->
+        <div id="language-selector" class="flex justify-center gap-2 mb-4">
+            <button data-lang="en" class="lang-btn px-4 py-2 text-sm rounded-lg transition hover:bg-slate-200">English</button>
+            <button data-lang="bm" class="lang-btn px-4 py-2 text-sm rounded-lg transition hover:bg-slate-200">Bahasa</button>
+            <button data-lang="ch" class="lang-btn px-4 py-2 text-sm rounded-lg transition hover:bg-slate-200">中文</button>
+        </div>
+        
+        <!-- Login Screen -->
+        <div id="login-view" class="bg-white p-8 rounded-xl shadow-lg transition-opacity duration-300">
+            <div id="assessment-notice" class="text-sm text-slate-500 mb-6 text-center border-b pb-4"></div>
+            <h1 id="login-title" class="text-3xl font-bold text-slate-800 mb-2">Assessment Login</h1>
+            <p id="login-subtitle" class="text-slate-600 mb-6">Please enter your email to begin.</p>
+            <div class="space-y-4">
+                <input id="email-input" type="email" placeholder="you@example.com" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                <button id="login-button" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform active:scale-95">Sign In</button>
+            </div>
+        </div>
+
+        <!-- Instruction Screen -->
+        <div id="instruction-view" class="hidden bg-white p-8 rounded-xl shadow-lg transition-opacity duration-300">
+            <div id="instruction-text" class="text-slate-600 space-y-4 mb-8">
+                <!-- Instruction content goes here -->
+            </div>
+            <div class="flex justify-end">
+                <button id="start-button" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform active:scale-95">Next</button>
+            </div>
+        </div>
+
+        <!-- Question Screen -->
+        <div id="question-view" class="hidden bg-white rounded-xl shadow-lg transition-opacity duration-300">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="question-counter" class="text-sm font-medium text-slate-500">Question X of Y</span>
+                     <div class="w-full bg-slate-200 rounded-full h-2.5 mx-4">
+                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <p id="follow-up-indicator" class="text-sm font-medium text-slate-500 text-center mb-4 hidden"></p>
+                <h2 id="question-text" class="text-2xl font-semibold text-slate-800 mb-8 min-h-[96px]">Question text goes here...</h2>
+                <div id="choices-container" class="space-y-3">
+                    <!-- Choices will be injected here -->
+                </div>
+            </div>
+            <div class="bg-slate-50 px-8 py-4 flex justify-between items-center rounded-b-xl border-t border-slate-200">
+                <button id="back-button" class="text-slate-600 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 transition-transform transform active:scale-95">Back</button>
+                <button id="next-button-slider" class="hidden bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform active:scale-95">Next</button>
+            </div>
+        </div>
+        
+        <!-- End Screen -->
+        <div id="end-view" class="hidden bg-white p-8 rounded-xl shadow-lg text-center transition-opacity duration-300">
+             <div id="submission-spinner" class="hidden w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+             <div id="submission-success-icon" class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h1 id="end-title" class="text-3xl font-bold text-slate-800 mb-2">Assessment Complete!</h1>
+            <p id="end-subtitle" class="text-slate-600 mb-6">Thank you for completing the assessment. Your results have been submitted.</p>
+            
+            <div id="summary-container" class="mt-8 text-left max-h-[40vh] overflow-y-auto border border-slate-200 rounded-lg">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50 sticky top-0 z-10">
+                        <tr>
+                            <th id="summary-q-num" scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Q#</th>
+                            <th id="summary-question" scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Question</th>
+                            <th id="summary-answer" scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Answer</th>
+                            <th id="summary-value" scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-table-body" class="bg-white divide-y divide-slate-200">
+                        <!-- Summary rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-8 flex justify-center gap-4">
+                <button id="download-csv-button" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform active:scale-95">Download CSV</button>
+                <button id="restart-button" class="bg-slate-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-transform transform active:scale-95">Start Over</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden form and iframe for Google Sheets submission -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(this.dataset.submitted === 'true'){console.log('Submission frame loaded.'); document.getElementById('submission-spinner').classList.add('hidden'); document.getElementById('submission-success-icon').classList.remove('hidden');}"></iframe>
+    <form id="g-sheet-form" method="post" target="hidden_iframe">
+        <input type="hidden" name="submissionData" id="submission-data-input">
+    </form>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- CONFIGURATION ---
+            const GOOGLE_APP_SCRIPT_URL = 'YOUR_GOOGLE_APP_SCRIPT_URL_HERE';
+
+            // --- DATA ---
+            const answerSets = {
+                '#1#': { en: [{v:0,t:'Never'},{v:1,t:'Seldom'},{v:2,t:'Sometimes'},{v:3,t:'Often'},{v:4,t:'Always'}], bm: [{v:0,t:'Tidak sama sekali'},{v:1,t:'Jarang'},{v:2,t:'Kadang-kadang'},{v:3,t:'Sering'},{v:4,t:'Sentiasa'}], ch: [{v:0,t:'从不'},{v:1,t:'很少'},{v:2,t:'有时'},{v:3,t:'经常'},{v:4,t:'总是'}] },
+                '#2#': { en: [{v:4,t:'Never'},{v:3,t:'Seldom'},{v:2,t:'Sometimes'},{v:1,t:'Often'},{v:0,t:'Always'}], bm: [{v:4,t:'Tidak sama sekali'},{v:3,t:'Jarang'},{v:2,t:'Kadang-kadang'},{v:1,t:'Sering'},{v:0,t:'Sentiasa'}], ch: [{v:4,t:'从不'},{v:3,t:'很少'},{v:2,t:'有时'},{v:1,t:'经常'},{v:0,t:'总是'}] },
+                '#3#': { en: [{v:0,t:'To a very small extent'},{v:1,t:'To a small extent'},{v:2,t:'Somewhat'},{v:3,t:'To a large extent'},{v:4,t:'To a very large extent'}], bm: [{v:0,t:'Pada tahap yang sangat kecil'},{v:1,t:'Pada tahap yang kecil'},{v:2,t:'Secara Sederhana'},{v:3,t:'Pada tahap yang besar'},{v:4,t:'Pada tahap yang sangat besar'}], ch: [{v:0,t:'极小程度'},{v:1,t:'小程度'},{v:2,t:'有些程度'},{v:3,t:'较大程度'},{v:4,t:'极大程度'}] },
+                '#4#': { en: [{v:4,t:'To a very small extent'},{v:3,t:'To a small extent'},{v:2,t:'Somewhat'},{v:1,t:'To a large extent'},{v:0,t:'To a very large extent'}], bm: [{v:4,t:'Pada tahap yang sangat kecil'},{v:3,t:'Pada tahap yang kecil'},{v:2,t:'Secara Sederhana'},{v:1,t:'Pada tahap yang besar'},{v:0,t:'Pada tahap yang sangat besar'}], ch: [{v:4,t:'极小程度'},{v:3,t:'小程度'},{v:2,t:'有些程度'},{v:1,t:'较大程度'},{v:0,t:'极大程度'}] },
+                '#5#': { en: [{v:4,t:'Very Unsatisfied'},{v:3,t:'Unsatisfied'},{v:2,t:'Somewhat Satisfied'},{v:1,t:'Satisfied'},{v:0,t:'Very Satisfied'}], bm: [{v:4,t:'Sangat tidak puas'},{v:3,t:'Tidak Puas'},{v:2,t:'Agak Puas'},{v:1,t:'Puas'},{v:0,t:'Sangat Puas'}], ch: [{v:4,t:'非常不满意'},{v:3,t:'不满意'},{v:2,t:'有些满意'},{v:1,t:'满意'},{v:0,t:'非常满意'}] },
+                '#6#': { en: [{v:0,t:'No'},{v:1,t:'Yes, but very little'},{v:2,t:'Yes, to a certain degree'},{v:3,t:'Yes, certainly'}], bm: [{v:0,t:'Tidak'},{v:1,t:'Ya, tetapi hanya sedikit'},{v:2,t:'Ya, pada tahap tertentu'},{v:3,t:'Ya, semestinya'}], ch: [{v:0,t:'不是'},{v:1,t:'是,但很少'},{v:2,t:'是,一定程度上'},{v:3,t:'是,肯定地'}] },
+                '#7#': { en: [{v:0,t:'Not at all'},{v:1,t:'A small part of the time'},{v:2,t:'Part of the time'},{v:3,t:'A large part of the time'},{v:4,t:'All the time'}], bm: [{v:0,t:'Tidak sama sekali'},{v:1,t:'Jarang'},{v:2,t:'Kadang-kadang'},{v:3,t:'Sering'},{v:4,t:'Sentiasa'}], ch: [{v:0,t:'完全不是'},{v:1,t:'很少时间'},{v:2,t:'一部分时间'},{v:3,t:'大部分时间'},{v:4,t:'始终如此'}] },
+                '#8#': { en: [{v:0,t:'Excellent'},{v:1,t:'Very Good'},{v:2,t:'Good'},{v:3,t:'Fair'},{v:4,t:'Poor'}], bm: [{v:0,t:'Cemerlang'},{v:1,t:'Sangat Baik'},{v:2,t:'Baik'},{v:3,t:'Sederhana'},{v:4,t:'Lemah'}], ch: [{v:0,t:'优秀'},{v:1,t:'非常好'},{v:2,t:'好'},{v:3,t:'一般'},{v:4,t:'差'}] },
+                '#9#': { en: [{v:0,t:'No'},{v:1,t:'Yes, A Few Times'},{v:2,t:'Yes, Monthly'},{v:3,t:'Yes, Weekly'},{v:4,t:'Yes, Daily'}], bm: [{v:0,t:'Tidak'},{v:1,t:'Ya, beberapa kali'},{v:2,t:'Ya, setiap bulan'},{v:3,t:'Ya, setiap minggu'},{v:4,t:'Ya, setiap hari'}], ch: [{v:0,t:'不是'},{v:1,t:'是,偶尔'},{v:2,t:'是,每月'},{v:3,t:'是,每周'},{v:4,t:'是,每天'}] },
+                '#10#': { en: [{v:0,t:'Never'},{v:1,t:'Once or twice'},{v:2,t:'About once a week'},{v:3,t:'About 2 or 3 times a week'},{v:4,t:'Almost everyday'},{v:5,t:'Everyday'}], bm: [{v:0,t:'Tidak Pernah'},{v:1,t:'Sekali atau dua kali'},{v:2,t:'Lebih kurang sekali seminggu'},{v:3,t:'Lebih kurang 2 atau 3 kali seminggu'},{v:4,t:'Hampir setiap hari'},{v:5,t:'Setiap hari'}], ch: [{v:0,t:'从不'},{v:1,t:'一次或两次'},{v:2,t:'大约每周一次'},{v:3,t:'大约每周两三次'},{v:4,t:'几乎每天'},{v:5,t:'每天'}] },
+                '#11#': { en: [{v:1,t:'Strongly Disagree'},{v:2,t:'Disagree'},{v:3,t:'Agree'},{v:4,t:'Strongly Agree'}], bm: [{v:1,t:'Sangat Tidak Setuju'},{v:2,t:'Tidak Setuju'},{v:3,t:'Setuju'},{v:4,t:'Sangat Setuju'}], ch: [{v:1,t:'强烈不同意'},{v:2,t:'不同意'},{v:3,t:'同意'},{v:4,t:'强烈同意'}] },
+                '#12#': { en: [{v:1,t:'Extremely Poorly'},{v:2,t:'Somewhat Poorly'},{v:3,t:'A Little Poorly'},{v:4,t:'Neither Poorly nor Well'},{v:5,t:'A Little Well'},{v:6,t:'Somewhat Well'},{v:7,t:'Extremely Well'}], bm: [{v:1,t:'Sangat Tidak Tepat'},{v:2,t:'Tidak Tepat'},{v:3,t:'Sedikit Tidak Tepat'},{v:4,t:'Neutral'},{v:5,t:'Sedikit Tepat'},{v:6,t:'Tepat'},{v:7,t:'Sangat Tepat'}], ch: [{v:1,t:'非常不符合'},{v:2,t:'不符合'},{v:3,t:'有点不符合'},{v:4,t:'中立'},{v:5,t:'有点符合'},{v:6,t:'符合'},{v:7,t:'非常符合'}] },
+                '#13#': { en: [{v:0,t:'0: Not at all Likely'},{v:1,t:'1'},{v:2,t:'2'},{v:3,t:'3'},{v:4,t:'4'},{v:5,t:'5'},{v:6,t:'6'},{v:7,t:'7'},{v:8,t:'8'},{v:9,t:'9'},{v:10,t:'10: Extremely Likely'}], bm: [{v:0,t:'0: Tidak Mungkin Sekali'},{v:1,t:'1'},{v:2,t:'2'},{v:3,t:'3'},{v:4,t:'4'},{v:5,t:'5'},{v:6,t:'6'},{v:7,t:'7'},{v:8,t:'8'},{v:9,t:'9'},{v:10,t:'10: Amat Berkemungkinan'}], ch: [{v:0,t:'0: 不太可能'},{v:1,t:'1'},{v:2,t:'2'},{v:3,t:'3'},{v:4,t:'4'},{v:5,t:'5'},{v:6,t:'6'},{v:7,t:'7'},{v:8,t:'8'},{v:9,t:'9'},{v:10,t:'10: 非常可能'}] },
+                '#14#': { en: [{v:'Supervisor and above', t:'Supervisor and above'}, {v:'Subordinate', t:'Subordinate'}, {v:'Colleague', t:'Colleague'}, {v:'Stakeholder', t:'Stakeholder'}, {v:'Vendor', t:'Vendor'}, {v:'Others', t:'Others'}], bm: [{v:'Penyelia dan ke atas', t:'Penyelia dan ke atas'}, {v:'Pekerja bawahan', t:'Pekerja bawahan'}, {v:'Rakan sekerja', t:'Rakan sekerja'}, {v:'Pihak berkepentingan', t:'Pihak berkepentingan'}, {v:'Vendor', t:'Vendor'}, {v:'Lain-lain', t:'Lain-lain'}], ch: [{v:'主管及以上级别', t:'主管及以上级别'}, {v:'下属', t:'下属'}, {v:'同事', t:'同事'}, {v:'利益相关方', t:'利益相关方'}, {v:'供应商', t:'供应商'}, {v:'其他人员', t:'其他人员'}] },
+            };
+            const fullQuestionList = [
+                // Section 1 (1-61)
+                /* 1 */ { cat: '#1#', q: { en: "Do you get behind with your work?", bm: "Adakah anda ketinggalan dalam kerja anda?", ch: "你是否觉得自己的工作经常跟不上进度?" } },
+                /* 2 */ { cat: '#2#', q: { en: "Do you have enough time for your work tasks?", bm: "Adakah anda mempunyai masa yang mencukupi untuk menyelesaikan kerja anda?", ch: "你是否有足够的时间完成工作任务?" } },
+                /* 3 */ { cat: '#1#', q: { en: "Does your work put you in emotionally disturbing situations?", bm: "Adakah anda mengalami situasi yang mengganggu emosi anda di tempat kerja?", ch: "你在工作中是否遭遇过令你情绪困扰的情况?" } },
+                /* 4 */ { cat: '#1#', q: { en: "Do you have to relate to other people's personal problems as part of your work?", bm: "Adakah mengambil tahu masalah peribadi orang lain, sebahagian daripada kerja anda?", ch: "你的工作是否涉及其他人的私人问题?" } },
+                /* 5 */ { cat: '#2#', q: { en: "Do you have a large degree of influence concerning your work?", bm: "Adakah anda mempunyai pengaruh yang besar terhadap kerja anda?", ch: "你对自己的工作有多大的影响力?" } },
+                /* 6 */ { cat: '#2#', q: { en: "Can you influence the amount of work assigned to you?", bm: "Bolehkah anda mempengaruhi jumlah kerja yang diberikan kepada anda?", ch: "你是否能对自己的工作量产生影响?" } },
+                /* 7 */ { cat: '#2#', q: { en: "How often is your nearest superior willing to listen to your problems at work?", bm: "Berapa kerapkah penyelia anda bersedia mendengar masalah yang dihadapi di tempat kerja?", ch: "你的直属上司是否经常感意 听你的工作问题?" } },
+                /* 8 */ { cat: '#2#', q: { en: "How often do you get help and support from your nearest superior?", bm: "Berapa kerapkah anda boleh dapat bantuan dan sokongan daripada penyelia anda?", ch: "你是否经常从直属上司那里获得帮助和支持?" } },
+                /* 9 */ { cat: '#3#', q: { en: "Do you work at a high pace throughout the day?", bm: "Adakah anda bekerja pada kadar yang tinggi/pantas sepanjang hari?", ch: "在多大程度上你是否整天都在快节奏中工作?" } },
+                /* 10 */ { cat: '#3#', q: { en: "Is it necessary to keep working at a high pace?", bm: "Adakah anda perlu bekerja pada kadar yang tinggi/pantas setiap masa?", ch: "在多大程度上,你是否有必要一直保持高节奏的工作?" } },
+                /* 11 */ { cat: '#4#', q: { en: "Do you have the possibility of learning new things through your work?", bm: "Adakah anda diberi peluang untuk mempelajari perkara baru melalui kerja anda?", ch: "在多大程度上,你的工作是否提供学习新事物的机会?" } },
+                /* 12 */ { cat: '#4#', q: { en: "Does your work require you to take the initiative?", bm: "Adakah kerja anda memerlukan anda mengambil inisiatif atau pro-aktif?", ch: "在多大程度上,你的工作是否需要你主动采取行动?" } },
+                /* 13 */ { cat: '#4#', q: { en: "Is your work meaningful?", bm: "Adakah kerja anda bermakna?", ch: "在多大程度上,你认为自己的工作有意义吗?" } },
+                /* 14 */ { cat: '#4#', q: { en: "Do you feel that the work you do is important?", bm: "Adakah anda rasa kerja yang anda laksanakan adalah penting?", ch: "在多大程度上,你认为你所做的工作(或被分配的任务)重要吗?" } },
+                /* 15 */ { cat: '#4#', q: { en: "Do you feel that your place of work is of great importance to you?", bm: "Adakah anda rasa tempat kerja anda sangat penting bagi anda?", ch: "在多大程度上,你认为工作单位对你很重要吗?" } },
+                /* 16 */ { cat: '#4#', q: { en: "Would you recommend a good friend to apply for a position at your workplace?", bm: "Adakah anda akan mengesyorkan rakan baik untuk memohon jawatan di tempat kerja anda?", ch: "你会推荐你的好朋友到你的工作单位申请职位吗?" } },
+                /* 17 */ { cat: '#4#', q: { en: "At your place of work, are you informed well in advance concerning for example important decisions, changes, or plans for the future?", bm: "Di tempat kerja anda, adakah anda dimaklumkan lebih awal, contohnya, keputusan penting, perubahan, atau rancangan untuk masa depan?", ch: "在你的工作单位,你是否能提前充分地了解重要决策、变化或未来计划等方面的信息?" } },
+                /* 18 */ { cat: '#4#', q: { en: "Do you receive all the information you need in order to do your work well?", bm: "Adakah anda menerima semua maklumat yang diperlukan untuk melakukan kerja anda dengan baik?", ch: "你是否获得能让你顺利完成工作所需的所有资讯?" } },
+                /* 19 */ { cat: '#4#', q: { en: "Is your work recognised and appreciated by the management?", bm: "Adakah hasil kerja anda diiktiraf dan dihargai oleh pihak pengurusan?", ch: "你的工作是否得到管理层的认可和赞赏?" } },
+                /* 20 */ { cat: '#4#', q: { en: "Are you treated fairly at your workplace?", bm: "Adakah anda dilayan dengan adil di tempat kerja anda?", ch: "在多大程度上,你在工作单位是否受到公平对待?" } },
+                /* 21 */ { cat: '#4#', q: { en: "Does your work have clear objectives?", bm: "Adakah kerja anda mempunyai objektif yang jelas?", ch: "在多大程度上,你的工作是否有明确的目标?" } },
+                /* 22 */ { cat: '#4#', q: { en: "Do you know exactly what is expected of you at work?", bm: "Adakah anda tahu dengan tepat apa yang diharapkan daripada anda di tempat kerja?", ch: "在多大程度上,你是否清楚工作上的具体期望?" } },
+                /* 23 */ { cat: '#4#', q: { en: "To what extent would you say that your immediate superior gives high priority to job satisfaction?", bm: "Sejauh manakah anda akan mengatakan bahawa penyelia anda sangat mengutamakan kepuasan kerja?", ch: "在多大程度上,你认为你的上司重视员工的工作满意?" } },
+                /* 24 */ { cat: '#4#', q: { en: "To what extent would you say that your immediate superior is good at work planning?", bm: "Sejauh manakah anda akan mengatakan bahawa penyelia anda pandai merancang kerja?", ch: "在多大程度上,你认为你的直属上司擅长工作计划?" } },
+                /* 25 */ { cat: '#4#', q: { en: "Does the management trust the employees to do their work well?", bm: "Adakah pihak pengurusan percaya pekerja melakukan kerja mereka dengan baik?", ch: "在多大程度上,管理层是否相信员工能把工作做好?" } },
+                /* 26 */ { cat: '#4#', q: { en: "Can you trust the information that comes from the management?", bm: "Adakah anda percaya maklumat yang datang daripada pihak pengurusan?", ch: "在多大程度上,你是否相信来自管理层的信息?" } },
+                /* 27 */ { cat: '#4#', q: { en: "Are conflicts resolved in a fair way?", bm: "Adakah konflik diselesaikan dengan cara yang adil?", ch: "在多大程度上,冲突是否以公平的方式解决?" } },
+                /* 28 */ { cat: '#4#', q: { en: "Is the work distributed fairly?", bm: "Adakah kerja diagihkan secara adil?", ch: "在多大程度上、工作是否被公平分配?" } },
+                /* 29 */ { cat: '#5#', q: { en: "How pleased are you with your job as a whole?", bm: "Sejauh manakah anda berpuas hati dengan pekerjaan anda secara keseluruhan?", ch: "你对工作整体感到多大程度的满意?" } },
+                /* 30 */ { cat: '#6#', q: { en: "Do you feel that your work drains so much of your energy that it has a negative effect on your private life?", bm: "Adakah anda rasa kerja anda menggunakan banyak tenaga sehingga ia memberi kesan negatif kepada kehidupan peribadi anda?", ch: "你是否觉得工作消耗了太多精力,对私生活产生了负面影响?" } },
+                /* 31 */ { cat: '#6#', q: { en: "Do you feel that your work takes so much of your time that it has a negative effect on your private life?", bm: "Adakah anda rasa kerja anda menggunakan terlalu banyak masa sehingga menjejaskan kehidupan peribadi anda?", ch: "你感觉工作占用了太多时间,影响到私生活吗?" } },
+                /* 32 */ { cat: '#7#', q: { en: "How often have you been irritable?", bm: "Berapa kerapkah anda berasa mudah marah?", ch: "你经常感到烦躁吗?" } },
+                /* 33 */ { cat: '#7#', q: { en: "How often have you been stressed?", bm: "Berapa kerapkah anda berasa tertekan?", ch: "你经常感到压力大吗?" } },
+                /* 34 */ { cat: '#7#', q: { en: "How often have you felt worn out?", bm: "Berapa kerapkah anda berasa lesu?", ch: "你经常感到筋疲力尽吗?" } },
+                /* 35 */ { cat: '#7#', q: { en: "How often have you been emotionally exhausted?", bm: "Berapa kerapkah anda berasa letih secara emosi?", ch: "你经常感到情緒上的疲惫吗?" } },
+                /* 36 */ { cat: '#8#', q: { en: "In general, would you say your health is...?", bm: "Secara umum, bagaimana anda menilai tahap kesihatan diri anda?", ch: "总体来说,你 如何评价你的健康状况?" } },
+                /* 37 */ { cat: '#9#', q: { en: "Have you been exposed to undesired sexual attention at your workplace during the last 12 months?", bm: "Dalam tempoh 12 bulan yang lepas, pernahkah anda mengalami gangguan seksual yang tidak diingini di tempat kerja?", ch: "在过去的12个月里,你在工作中遭遇过不适当的性关注(比如性骚扰性质的言行)吗?" }, followUp: { cat: '#14#', q: { en: "Please indicate which of the following party have given you undesired sexual attention:", bm: "Sila pilih pihak berikut yang telah melakukan gangguan seksual yang tidak diingini terhadap anda:", ch: "请指出以下哪一方曾对你施加不适当的性关注:" } } },
+                /* 38 */ { cat: '#9#', q: { en: "Have you been exposed to threats of violence at your workplace during the last 12 months?", bm: "Dalam tempoh 12 bulan yang lepas, pernahkah anda mengalami ancaman keganasan di tempat kerja?", ch: "在过去的12个月里,你在工作中遭遇过暴力威胁吗?" }, followUp: { cat: '#14#', q: { en: "Please indicate which of the following party have given threats of physical violence:", bm: "Sila pilih pihak berikut yang telah membuat ancaman keganasan terhadap anda:", ch: "请指出以下哪些人曾对你进行身体暴力威胁:" } } },
+                /* 39 */ { cat: '#9#', q: { en: "Have you been exposed to physical violence at your workplace during the last 12 months?", bm: "Dalam tempoh 12 bulan yang lepas, pernahkah anda mengalami keganasan fizikal di tempat kerja?", ch: "在过去的12个月里,您是否在工作中遭遇过人身暴力?" }, followUp: { cat: '#14#', q: { en: "Please indicate which of the following party was the source of physical violence:", bm: "Sila nyatakan pihak mana yang menjadi punca keganasan fizikal berikut:", ch: "请指出以下哪些人曾对你做出过人身暴力:" } } },
+                /* 40 */ { cat: '#9#', q: { en: "Have you been exposed to bullying at your workplace during the last 12 months?", bm: "Adakah anda pernah dibuli di tempat kerja anda dalam tempoh 12 bulan yang lalu?", ch: "在过去的12个月里,你在工作中是否遭受过霸凌?" }, followUp: { cat: '#14#', q: { en: "Please indicate which of the following party was the source of bullying towards you:", bm: "Sila nyatakan pihak mana antara berikut yang membuli anda:", ch: "请指出以下哪一方是霸凌行为的发起者:" } } },
+                /* 41 */ { cat: '#10#', q: { en: "During the past month, how often did you feel happy?", bm: "Sepanjang bulan lalu, berapa kerapkah anda berasa gembira dengan hidup anda?", ch: "在过去的一个月中,你经常感到生活快乐吗?" } },
+                /* 42 */ { cat: '#10#', q: { en: "During the past month, how often did you feel interested in life?", bm: "Sepanjang bulan lalu, berapa kerapkah anda berasa berminat dengan kehidupan anda?", ch: "在过去的一个月中,你经常对生活感到有兴趣吗?" } },
+                /* 43 */ { cat: '#10#', q: { en: "During the past month, how often did you feel satisfied with life?", bm: "Sepanjang bulan lalu, berapa kerapkah anda berasa puas hati dengan kehidupan anda?", ch: "在过去的一个月中,你对生活满意吗?" } },
+                /* 44 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that you had something important to contribute to society?", bm: "Sepanjang bulan lalu, berapa kerapkah anda rasa bahawa anda memberi sumbangan penting kepada masyarakat?", ch: "在过去的一个月中,你觉得为社会做出了重要贡献吗?" } },
+                /* 45 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that you belonged to a community (like a social group, or your neighborhood)?", bm: "Sepanjang bulan lalu, berapa kerapkah anda berasa anda tergolong dalam sesebuah komuniti (seperti kumpulan sosial, atau kejirananan anda)?", ch: "在过去的一个月中、你感觉自己归属于某个社群(如:社交圈子 街坊)?" } },
+                /* 46 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that our society is a good place, or is becoming a better place, for all people?", bm: "Sepanjang bulan lalu, berapa kerapkah anda merasakan bahawa masyarakat adalah tempat yang baik, atau menjadi tempat yang lebih baik, untuk semua orang?", ch: "在过去的一个月中,你认为社会是否对所有人来说都是一个好地方,或者正在变得更好吗?" } },
+                /* 47 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that people are basically good?", bm: "Sepanjang bulan lalu, berapa kerapkah anda merasa orang adalah baik secara semula jadi?", ch: "在过去的一个月里,你经常觉得人天生是善良的吗?" } },
+                /* 48 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that the way our society works makes sense to you?", bm: "Sepanjang bulan lalu, berapa kerap anda merasa bahawa cara masyarakat kita berfungsi, masuk akal kepada anda?", ch: "在过去的一个月里,你经常觉得我们的社会运行方式对你来说是合理的吗?" } },
+                /* 49 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that you liked most parts of your personality?", bm: "Sepanjang bulan lalu, berapa kerapkah anda berasa menyukai kebanyakan aspek keperibadian diri anda?", ch: "在过去的一个月里,你经常喜欢自己大部分的个性和特质吗?" } },
+                /* 50 */ { cat: '#10#', q: { en: "During the past month, how often did you feel good at managing the responsibilities of your daily life?", bm: "Sepanjang bulan lalu, berapa kerapkah anda berasa cekap menguruskan tanggungjawab kehidupan harian anda?", ch: "在过去的一个月里,你觉得自己能够很好地处理日常生活中的责任吗?" } },
+                /* 51 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that you had warm and trusting relationships with others?", bm: "Sepanjang bulan lalu, berapa kerapkah anda berasa mempunyai hubungan yang mesra dan saling mempercayai orang lain?", ch: "在过去的一个月里,你感觉自己与他人之间有温暖和相互信任的关系吗?" } },
+                /* 52 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that you had experiences that challenged you to grow and become a better person?", bm: "Sepanjang bulan lalu, berapa kerapkah anda mengalami pengalaman yang mencabar untuk menjadi orang yang lebih baik?", ch: "在过去的一个月里,你觉得自己经历了挑战,并且成长成为更好的人吗?" } },
+                /* 53 */ { cat: '#10#', q: { en: "During the past month, how often did you feel confident to think or express your own ideas and opinions?", bm: "Sepanjang bulan lalu, berapa kerapkah anda berasa yakin untuk berfikir serta meluahkan idea dan pendapat anda sendiri?", ch: "在过去的一个月里,你经常自信地思考和表达自己的观点和意见吗?" } },
+                /* 54 */ { cat: '#10#', q: { en: "During the past month, how often did you feel that your life has a sense of direction or meaning to it?", bm: "Sepanjang bulan lalu, berapa kerapkah anda merasakan bahawa hidup anda mempunyai arah dan makna?", ch: "在过去的一个月里,你觉得自己的生活有方向和意义吗?" } },
+                /* 55 */ { cat: '#11#', q: { en: "If I make a mistake in this team, it is held against me.", bm: "Jika saya melakukan kesilapan dalam pasukan ini, kesilapan itu akan digunakan terhadap saya.", ch: "在这个团队中,如果我犯了错误,我会被指责." } },
+                /* 56 */ { cat: '#11#', q: { en: "Members of this team are able to bring up problems and tough issues.", bm: "Ahli pasukan ini boleh membangkitkan masalah dan isu yang sukar.", ch: "这个团队的成员能提出问题和棘手的议题." } },
+                /* 57 */ { cat: '#11#', q: { en: "People on this team sometimes reject others for being different.", bm: "Ahli pasukan ini menolak orang lain kerana mereka berbeza.", ch: "这个团队中,人们会因为别人的不同而排斥他们." } },
+                /* 58 */ { cat: '#11#', q: { en: "It is safe to take a risk in this team.", bm: "Dalam pasukan ini, mengambil risiko adalah selamat atau dialu-alukan.", ch: "在这个团队中,感觉自己可以放心地尝试新事物和承担风险." } },
+                /* 59 */ { cat: '#11#', q: { en: "It is difficult to ask other members of this team for help.", bm: "Dalam pasukan ini, sukar untuk meminta bantuan daripada ahli pasukan yang lain.", ch: "向这个团队中的其他成员寻求帮助是困难的." } },
+                /* 60 */ { cat: '#11#', q: { en: "No one on this team would deliberately act in a way that undermines my efforts.", bm: "Tiada sesiapa dalam pasukan ini yang sengaja merendahkan usaha saya.", ch: "这个团队中,没有人故意破坏我的努力." } },
+                /* 61 */ { cat: '#11#', q: { en: "Working with members of this team, my unique skills and talents are valued and utilized.", bm: "Ahli pasukan ini menghargai dan memanfaatkan kemahiran serta bakat unik saya.", ch: "这个团队的成员重视并利用我的独特技能和才能." } },
+                // Section 2 (62-71)
+                /* 62 */ { cat: '#13#', q: { en: "How likely would you recommend an interested friend to join your company?", bm: "Adakah anda akan mengesyorkan rakan yang berminat untuk menyertai syarikat/organisasi ini?", ch: "你会推荐有兴趣的朋友加入你现在任职的公司吗?" } },
+                /* 63 */ { cat: '#12#', q: { en: "Extraverted, enthusiastic describes me.", bm: "Saya digambarkan sebagai seseorang yang bersifat ekstrovert dan bersemangat.", ch: "外向、热情、符合我." } },
+                /* 64 */ { cat: '#12#', q: { en: "Critical, quarrelsome describes me.", bm: "Saya digambarkan sebagai seseorang yang berfikiran kritikal dan suka berdebat.", ch: "善于批判,争执,符合我." } },
+                /* 65 */ { cat: '#12#', q: { en: "Dependable, self-disciplined describes me.", bm: "Saya digambarkan sebagai seseorang yang boleh dipercayai dan berdisiplin diri.", ch: "可靠,自律、符合我." } },
+                /* 66 */ { cat: '#12#', q: { en: "Anxious, easily upset describes me.", bm: "Saya digambarkan sebagai seseorang yang berasa resah dan mudah terganggu.", ch: "焦虑,容易难过,符合我." } },
+                /* 67 */ { cat: '#12#', q: { en: "Open to new experiences, complex describes me.", bm: "Saya digambarkan sebagai seseorang yang terbuka kepada pengalaman baharu, kompleks.", ch: "喜欢体验新事物、思维复杂,符合我." } },
+                /* 68 */ { cat: '#12#', q: { en: "Reserved, quiet describes me.", bm: "Saya digambarkan sebagai seseorang yang diam dan tenang.", ch: "内向,安静,符合我." } },
+                /* 69 */ { cat: '#12#', q: { en: "Sympathetic, warm describes me.", bm: "Saya digambarkan sebagai seseorang yang bersimpati dan peramah.", ch: "富有同理心、温暖,符合我." } },
+                /* 70 */ { cat: '#12#', q: { en: "Disorganized, careless describes me.", bm: "Saya digambarkan sebagai seseorang yang tidak teratur dan cuai.", ch: "杂乱无章、粗心,符合我." } },
+                /* 71 */ { cat: '#12#', q: { en: "Calm, emotionally stable describes me.", bm: "Saya digambarkan sebagai seseorang yang tenang dan stabil emosi.", ch: "平静,情绪稳定,符合我." } },
+                // Section 3 (72-81)
+                /* 72 */ { cat: '#11#', q: { en: "Conventional, uncreative describes me.", bm: "Saya digambarkan sebagai seseorang yang konvensional dan tidak kreatif.", ch: "保守,不创意、符合我." } },
+                /* 73 */ { cat: '#11#', q: { en: "On the whole, I am satisfied with myself.", bm: "Secara keseluruhan, saya berasa puas dengan diri saya.", ch: "整体而言,我对自己感到满意。" } },
+                /* 74 */ { cat: '#11#', q: { en: "At times I think I am no good at all.", bm: "Kadangkala, saya rasa saya langsung tidak berguna.", ch: "有时候,我会觉得自己一无是处。" } },
+                /* 75 */ { cat: '#11#', q: { en: "I feel that I have a number of good qualities.", bm: "Saya rasa saya mempunyai beberapa sifat yang baik.", ch: "我覺得自己擁有一些良好的特質。" } },
+                /* 76 */ { cat: '#11#', q: { en: "I am able to do things as well as most other people.", bm: "Saya rasa saya mampu melakukan sesuatu perkara dengan baik seperti kebanyakan orang lain.", ch: "我觉得自己可以像大多数人一样,把事情办好。" } },
+                /* 77 */ { cat: '#11#', q: { en: "I feel I do not have much to be proud of.", bm: "Saya rasa saya tidak mempunyai banyak pencapaian untuk dibanggakan.", ch: "我覺得自己沒有什麼值得驕傲的成就。" } },
+                /* 78 */ { cat: '#11#', q: { en: "I certainly feel useless at times.", bm: "Kadangkala, saya rasa tidak berguna.", ch: "有时候,我会觉得自己没用。" } },
+                /* 79 */ { cat: '#11#', q: { en: "I feel that I'm a person of worth.", bm: "Saya rasa saya adalah seorang yang bernilai.", ch: "我覺得自己是個有價值的人。" } },
+                /* 80 */ { cat: '#11#', q: { en: "I wish I could have more respect for myself.", bm: "Saya impikan untuk mempunyai rasa hormat yang lebih tinggi untuk diri sendiri.", ch: "我希望我能夠更尊重自己。" } },
+                /* 81 */ { cat: '#11#', q: { en: "All in all, I am inclined to think that I am a failure.", bm: "Saya cenderung untuk berfikir bahawa saya adalah seorang yang gagal.", ch: "我傾向於認為自己為人失敗。" } },
+            ];
+             const questions = fullQuestionList.slice(0, 81).map((item, index) => ({ ...item, number: index + 1 }));
+
+
+            const SECTION_BREAKS = { 1: 62, 2: 71, 3: 81 };
+
+            const instructionContent = {
+                en: {
+                    1: { 
+                        title: "People @ Work Index", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">People @ Work Index</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 Aim</b></font></span> <font size="2">The purpose is to assess an individual's perception of their work environment and their well-being, and their sense of psychological safety.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 Time</b></font></span> <font size="2">It takes 10 minutes to complete.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ Items</b></font></span> <font size="2">There are a total of 62 items.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️Credits</b></font></span> <font size="2">National Research Centre for Work Environment (NFA) (Denmark) (2004) & Professor Corey Keyes (2002) & Professor Amy Edmondson (1999)</font></div><br>`
+                    },
+                    2: { 
+                        title: "Personality", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">Personality</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 Aim&emsp;</b></font></span> <font size="2">The purpose is to assess the "Big Five" personality traits.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 Time&emsp;</b></font></span> <font size="2">It takes 3 minutes to complete.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ Items&emsp;</b></font></span> <font size="2">There are a total of 10 items.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️Credits&emsp;</b></font></span> <font size="2">Gosling, Rentfrow and Swann (2003) & DeBell and Colleagues (2021)</font></div><br>`
+                    },
+                    3: { 
+                        title: "Self-Esteem", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">Self-Esteem</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 Aim&emsp;</b></font></span> <font size="2">The purpose is to assess one's level of global self-esteem.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 Time&emsp;</b></font></span> <font size="2">It takes 5 minutes to complete.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ Items&emsp;</b></font></span> <font size="2">There are a total of 10 items.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️Credits&emsp;</b></font></span> <font size="2">Professor Morris Rosenberg (1965)</font></div><br>`
+                    }
+                },
+                bm: {
+                     1: { 
+                        title: "Indeks People @ Work", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">Indeks People @ Work</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 Matlamat</b></font></span> <font size="2">Tujuannya adalah untuk menilai persepsi individu terhadap persekitaran kerja dan kesejahteraan mereka, serta rasa selamat dari segi psikologi.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 Masa</b></font></span> <font size="2">Ia mengambil masa 10 minit untuk disiapkan.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ Item</b></font></span> <font size="2">Terdapat sejumlah 62 item.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️Kredit</b></font></span> <font size="2">Pusat Penyelidikan Kebangsaan untuk Persekitaran Kerja (NFA) (Denmark) (2004) & Profesor Corey Keyes (2002) & Profesor Amy Edmondson (1999)</font></div><br>`
+                    },
+                    2: { 
+                        title: "Personaliti", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">Personaliti</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 Matlamat&emsp;</b></font></span> <font size="2">Tujuannya adalah untuk menilai "Big Five" tret personaliti.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 Masa&emsp;</b></font></span> <font size="2">Ia mengambil masa 3 minit untuk disiapkan.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ Item&emsp;</b></font></span> <font size="2">Terdapat sejumlah 10 item.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️Kredit&emsp;</b></font></span> <font size="2">Gosling, Rentfrow and Swann (2003) & DeBell dan Rakan-rakan (2021)</font></div><br>`
+                    },
+                    3: { 
+                        title: "Penghargaan Diri", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">Penghargaan Diri</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 Matlamat&emsp;</b></font></span> <font size="2">Tujuannya adalah untuk menilai tahap penghargaan diri global seseorang.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 Masa&emsp;</b></font></span> <font size="2">Ia mengambil masa 5 minit untuk disiapkan.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ Item&emsp;</b></font></span> <font size="2">Terdapat sejumlah 10 item.</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️Kredit&emsp;</b></font></span> <font size="2">Profesor Morris Rosenberg (1965)</font></div><br>`
+                    }
+                },
+                ch: {
+                     1: { 
+                        title: "People @ Work 指数", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">People @ Work 指数</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 目的</b></font></span> <font size="2">目的是评估个人对其工作环境和福祉的看法，以及他们的心理安全感。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 时间</b></font></span> <font size="2">完成需要10分钟。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ 项目</b></font></span> <font size="2">总共有62个项目。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️来源</b></font></span> <font size="2">国家工作环境研究中心（NFA）（丹麦）（2004）和 Corey Keyes 教授（2002）和 Amy Edmondson 教授（1999）</font></div><br>`
+                    },
+                    2: { 
+                        title: "性格", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">性格</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 目的&emsp;</b></font></span> <font size="2">目的是评估“五大”人格特质。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 时间&emsp;</b></font></span> <font size="2">完成需要3分钟。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ 项目&emsp;</b></font></span> <font size="2">总共有10个项目。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️来源&emsp;</b></font></span> <font size="2">Gosling, Rentfrow and Swann (2003) & DeBell 及其同事 (2021)</font></div><br>`
+                    },
+                    3: { 
+                        title: "自尊", 
+                        text: `<div class="text-center"><h4><font color="#FF6000">自尊</font></h4></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🎯 目的&emsp;</b></font></span> <font size="2">目的是评估一个人的整体自尊水平。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🕗 时间&emsp;</b></font></span> <font size="2">完成需要5分钟。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🗄️ 项目&emsp;</b></font></span> <font size="2">总共有10个项目。</font></div><br><div style="text-align: justify;line-height:1.3"><span style="display: inline-block;width:7rem;background-color:#FFC000;padding:4px;border-radius:6px"><font color="#fff"><b>&ensp;🖋️来源&emsp;</b></font></span> <font size="2">Morris Rosenberg 教授 (1965)</font></div><br>`
+                    }
+                }
+            };
+            
+            const uiTranslations = {
+                en: { loginTitle: "Assessment Login", loginSubtitle: "Please enter your email to begin.", signIn: "Sign In", next: "Next", back: "Back", startOver: "Start Over", reset: "Reset", endTitle: "Assessment Complete!", endSubtitle: "Thank you for completing the assessment. You may now close this window.", questionCounter: "Question {current} of {total}", followUp: "(Follow-up)", summaryQNum: "Q#", summaryQuestion: "Question", summaryAnswer: "Answer", summaryValue: "Value", downloadCSV: "Download CSV", assessmentNotice: "Please note that you are required to complete three (3) assessments.<br>Assessments Included: People@Work© Index, Personality and Self-Esteem." },
+                bm: { loginTitle: "Log Masuk Penilaian", loginSubtitle: "Sila masukkan e-mel anda untuk bermula.", signIn: "Log Masuk", next: "Seterusnya", back: "Kembali", startOver: "Mula Semula", reset: "Set semula", endTitle: "Penilaian Selesai!", endSubtitle: "Terima kasih kerana melengkapkan penilaian. Anda boleh menutup tetingkap ini sekarang.", questionCounter: "Soalan {current} daripada {total}", followUp: "(Susulan)", summaryQNum: "S#", summaryQuestion: "Soalan", summaryAnswer: "Jawapan", summaryValue: "Nilai", downloadCSV: "Muat turun CSV", assessmentNotice: "Sila ambil perhatian bahawa anda dikehendaki melengkapkan tiga (3) penilaian.<br>Penilaian Termasuk: Indeks People@Work©, Personaliti dan Penghargaan Diri." },
+                ch: { loginTitle: "评估登录", loginSubtitle: "请输入您的电子邮件以开始。", signIn: "登录", next: "下一个", back: "返回", startOver: "重新开始", reset: "重置", endTitle: "评估完成！", endSubtitle: "感谢您完成评估。您现在可以关闭此窗口。", questionCounter: "问题 {current} / {total}", followUp: "(跟进)", summaryQNum: "题号", summaryQuestion: "问题", summaryAnswer: "答案", summaryValue: "值", downloadCSV: "下载 CSV", assessmentNotice: "请注意，您需要完成三 (3) 项评估。<br>评估包括：People@Work© 指数、性格和自尊。" }
+            };
+
+            const STORAGE_KEY = 'assessment_prototype_state';
+
+            // --- STATE ---
+            let state = {
+                currentView: 'login',
+                currentQuestionIndex: 0,
+                currentFollowUpOf: null, // Stores the number of the question being followed-up on
+                answers: {},
+                lang: 'en',
+                userEmail: null,
+                startTime: null,
+                endTime: null
+            };
+
+            // --- DOM ELEMENTS ---
+            const views = { login: document.getElementById('login-view'), instruction: document.getElementById('instruction-view'), question: document.getElementById('question-view'), end: document.getElementById('end-view') };
+            const langButtons = document.querySelectorAll('.lang-btn');
+            const loginTitle = document.getElementById('login-title');
+            const loginSubtitle = document.getElementById('login-subtitle');
+            const loginButton = document.getElementById('login-button');
+            const emailInput = document.getElementById('email-input');
+            const startButton = document.getElementById('start-button');
+            const backButton = document.getElementById('back-button');
+            const restartButton = document.getElementById('restart-button');
+            
+            const nextButtonSlider = document.getElementById('next-button-slider');
+            const instructionText = document.getElementById('instruction-text');
+            const questionCounter = document.getElementById('question-counter');
+            const progressBar = document.getElementById('progress-bar');
+            const questionText = document.getElementById('question-text');
+            const choicesContainer = document.getElementById('choices-container');
+            const endTitle = document.getElementById('end-title');
+            const endSubtitle = document.getElementById('end-subtitle');
+            const followUpIndicator = document.getElementById('follow-up-indicator');
+            const summaryTableBody = document.getElementById('summary-table-body');
+            const summaryQNum = document.getElementById('summary-q-num');
+            const summaryQuestion = document.getElementById('summary-question');
+            const summaryAnswer = document.getElementById('summary-answer');
+            const summaryValue = document.getElementById('summary-value');
+            const downloadCsvButton = document.getElementById('download-csv-button');
+            const assessmentNotice = document.getElementById('assessment-notice');
+
+
+            // --- FUNCTIONS ---
+            const saveState = () => {
+                const stateToSave = { 
+                    answers: state.answers, 
+                    lang: state.lang, 
+                    currentQuestionIndex: state.currentQuestionIndex,
+                    userEmail: state.userEmail,
+                    startTime: state.startTime
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+            };
+
+            const loadState = () => {
+                const savedState = localStorage.getItem(STORAGE_KEY);
+                if (savedState) {
+                    const parsed = JSON.parse(savedState);
+                    state.answers = parsed.answers || {};
+                    state.lang = parsed.lang || 'en';
+                    state.userEmail = parsed.userEmail || null;
+                    state.startTime = parsed.startTime || null;
+                    state.currentQuestionIndex = parsed.currentQuestionIndex || 0;
+                    if (state.userEmail) {
+                        emailInput.value = state.userEmail;
+                    }
+                }
+            };
+            
+            const updateUIText = () => {
+                const t = uiTranslations[state.lang];
+                loginTitle.textContent = t.loginTitle;
+                loginSubtitle.textContent = t.loginSubtitle;
+                loginButton.textContent = t.signIn;
+                startButton.textContent = t.next;
+                nextButtonSlider.textContent = t.next;
+                backButton.textContent = t.back;
+                restartButton.textContent = t.startOver;
+                
+                endTitle.textContent = t.endTitle;
+                endSubtitle.textContent = t.endSubtitle;
+                followUpIndicator.textContent = t.followUp;
+                downloadCsvButton.textContent = t.downloadCSV;
+                assessmentNotice.innerHTML = t.assessmentNotice;
+
+                langButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === state.lang);
+                });
+                
+                if (state.currentView === 'question') renderQuestion();
+                if (state.currentView === 'instruction') {
+                    const currentQNumber = state.currentQuestionIndex < questions.length ? questions[state.currentQuestionIndex].number : 1;
+                    const currentSection = getCurrentSection(currentQNumber);
+                    showInstructions(currentSection, false);
+                }
+                if (state.currentView === 'end') {
+                    summaryQNum.textContent = t.summaryQNum;
+                    summaryQuestion.textContent = t.summaryQuestion;
+                    summaryAnswer.textContent = t.summaryAnswer;
+                    summaryValue.textContent = t.summaryValue;
+                    renderSummary();
+                }
+            };
+
+            const findAnswerData = (category, value) => {
+                if (!answerSets[category] || !answerSets[category][state.lang]) {
+                    return { text: 'N/A', value: value };
+                }
+                const set = answerSets[category][state.lang];
+                const found = set.find(choice => String(choice.v) === String(value));
+                if (found) {
+                    return { text: found.t, value: found.v };
+                }
+                // For slider, the text might not be in the set directly
+                if (category === '#13#') {
+                     return { text: value, value: value };
+                }
+                return { text: value, value: value }; 
+            };
+
+            const renderSummary = () => {
+                summaryTableBody.innerHTML = '';
+                let summaryHTML = '';
+
+                questions.forEach(q => {
+                    // Main question
+                    const mainAnswerValue = state.answers[q.number];
+                    if (mainAnswerValue !== undefined) {
+                        const answerData = findAnswerData(q.cat, mainAnswerValue);
+                        summaryHTML += `
+                            <tr>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900">${q.number}</td>
+                                <td class="px-4 py-3 whitespace-normal text-sm text-slate-500">${q.q[state.lang]}</td>
+                                <td class="px-4 py-3 whitespace-normal text-sm text-slate-500">${answerData.text}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-500">${answerData.value}</td>
+                            </tr>
+                        `;
+                    }
+
+                    // Follow-up question
+                    const followUpAnswerValue = state.answers[q.number + '-followup'];
+                    if (q.followUp && followUpAnswerValue !== undefined) {
+                        const answerData = findAnswerData(q.followUp.cat, followUpAnswerValue);
+                         summaryHTML += `
+                            <tr class="bg-slate-50">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900">${q.number}.1</td>
+                                <td class="px-4 py-3 whitespace-normal text-sm text-slate-500">${q.followUp.q[state.lang]}</td>
+                                <td class="px-4 py-3 whitespace-normal text-sm text-slate-500">${answerData.text}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-500">${answerData.value}</td>
+                            </tr>
+                        `;
+                    }
+                });
+                summaryTableBody.innerHTML = summaryHTML;
+            };
+
+            const renderView = () => {
+                Object.values(views).forEach(view => view.classList.add('hidden'));
+                if (views[state.currentView]) {
+                    views[state.currentView].classList.remove('hidden');
+                }
+
+                if (state.currentView === 'question') {
+                    renderQuestion();
+                } else if (state.currentView === 'end') {
+                    renderSummary();
+                }
+            };
+            
+            const renderQuestion = () => {
+                const t = uiTranslations[state.lang];
+                const mainQuestion = questions[state.currentQuestionIndex];
+                nextButtonSlider.classList.add('hidden');
+
+                // Determine if we are showing a main question or a follow-up
+                if (state.currentFollowUpOf) {
+                    const followUpInfo = mainQuestion.followUp;
+                    const answerCategory = followUpInfo.cat;
+                    const currentAnswerSet = answerSets[answerCategory][state.lang];
+                    
+                    questionText.textContent = followUpInfo.q[state.lang];
+                    followUpIndicator.classList.remove('hidden');
+                    choicesContainer.innerHTML = '';
+                    const savedFollowUpAnswer = state.answers[mainQuestion.number + '-followup'];
+
+                    currentAnswerSet.forEach(choice => {
+                        const choiceId = `q${mainQuestion.number}_followup_${choice.v.replace(/\s+/g, '-')}`;
+                        const isChecked = savedFollowUpAnswer === choice.v;
+                        const choiceHTML = `
+                            <label for="${choiceId}" class="choice-label block cursor-pointer p-4 border border-slate-300 rounded-lg hover:bg-slate-50 transition duration-200">
+                                <input type="radio" id="${choiceId}" name="q${mainQuestion.number}_followup_choices" value="${choice.v}" class="sr-only" ${isChecked ? 'checked' : ''}>
+                                <span class="font-medium text-slate-700">${choice.t}</span>
+                            </label>`;
+                        choicesContainer.insertAdjacentHTML('beforeend', choiceHTML);
+                    });
+
+                } else if (mainQuestion.number === 62) { // Special case for slider question
+                    const answerCategory = mainQuestion.cat;
+                    const answerSet = answerSets[answerCategory][state.lang];
+                    const minLabel = answerSet[0].t;
+                    const maxLabel = answerSet[answerSet.length-1].t;
+                    const savedValue = state.answers[mainQuestion.number] !== undefined ? state.answers[mainQuestion.number] : 5;
+                    
+                    questionText.textContent = mainQuestion.q[state.lang];
+                    followUpIndicator.classList.add('hidden');
+                    choicesContainer.innerHTML = `
+                        <div class="p-4">
+                            <div class="flex justify-between items-center text-sm text-slate-600 mb-2">
+                                <span>${minLabel}</span>
+                                <span class="text-xl font-bold text-blue-600" id="slider-value">${savedValue}</span>
+                                <span>${maxLabel}</span>
+                            </div>
+                            <input type="range" id="q62-slider" min="0" max="10" value="${savedValue}" class="w-full">
+                        </div>
+                    `;
+                    
+                    nextButtonSlider.classList.remove('hidden');
+
+                    const slider = document.getElementById('q62-slider');
+                    const sliderValueDisplay = document.getElementById('slider-value');
+                    
+                    slider.addEventListener('input', (e) => {
+                        sliderValueDisplay.textContent = e.target.value;
+                        state.answers[mainQuestion.number] = parseInt(e.target.value, 10);
+                        saveState();
+                    });
+
+                } else {
+                    const answerCategory = mainQuestion.cat;
+                    const currentAnswerSet = answerSets[answerCategory][state.lang];
+                    
+                    questionText.textContent = mainQuestion.q[state.lang];
+                    followUpIndicator.classList.add('hidden');
+                    choicesContainer.innerHTML = '';
+
+                    currentAnswerSet.forEach(choice => {
+                        const choiceId = `q${mainQuestion.number}_choice${choice.v}`;
+                        const isChecked = state.answers[mainQuestion.number] === choice.v;
+                        const choiceHTML = `
+                            <label for="${choiceId}" class="choice-label block cursor-pointer p-4 border border-slate-300 rounded-lg hover:bg-slate-50 transition duration-200">
+                                <input type="radio" id="${choiceId}" name="q${mainQuestion.number}_choices" value="${choice.v}" class="sr-only" ${isChecked ? 'checked' : ''}>
+                                <span class="font-medium text-slate-700">${choice.t}</span>
+                            </label>`;
+                        choicesContainer.insertAdjacentHTML('beforeend', choiceHTML);
+                    });
+                }
+                
+                questionCounter.textContent = t.questionCounter
+                    .replace('{current}', mainQuestion.number)
+                    .replace('{total}', questions.length);
+                
+                const progressPercentage = ((mainQuestion.number - 1) / questions.length) * 100;
+                progressBar.style.width = `${progressPercentage}%`;
+                backButton.classList.toggle('invisible', state.currentQuestionIndex === 0 && !state.currentFollowUpOf);
+            };
+
+            const showInstructions = (section, doRenderView = true) => {
+                state.currentView = 'instruction';
+                const content = instructionContent[state.lang][section];
+                instructionText.innerHTML = content.text;
+                if (doRenderView) renderView();
+            };
+
+            const getCurrentSection = (questionNumber) => {
+                if (questionNumber <= SECTION_BREAKS[1]) return 1;
+                if (questionNumber <= SECTION_BREAKS[2]) return 2;
+                return 3;
+            };
+
+            const handleLogin = () => {
+                const email = emailInput.value.trim();
+                if (email === '') return;
+                state.userEmail = email;
+                showInstructions(1);
+            };
+
+            const handleStart = () => {
+                if (state.currentQuestionIndex === 0 && !state.startTime) {
+                    state.startTime = new Date().toISOString();
+                }
+                state.currentView = 'question';
+                renderView();
+            };
+
+            const submitResults = () => {
+                if (!GOOGLE_APP_SCRIPT_URL || GOOGLE_APP_SCRIPT_URL === 'YOUR_GOOGLE_APP_SCRIPT_URL_HERE') {
+                    console.warn("Google Apps Script URL is not configured. Skipping submission.");
+                    return;
+                }
+
+                const submissionSpinner = document.getElementById('submission-spinner');
+                const successIcon = document.getElementById('submission-success-icon');
+                const iframe = document.getElementById('hidden_iframe');
+
+                submissionSpinner.classList.remove('hidden');
+                successIcon.classList.add('hidden');
+                
+                let durationString = 'N/A';
+                if (state.startTime && state.endTime) {
+                    const start = new Date(state.startTime);
+                    const end = new Date(state.endTime);
+                    const diffMs = end - start;
+                    const diffSecs = Math.floor(diffMs / 1000);
+                    const minutes = Math.floor(diffSecs / 60);
+                    const seconds = diffSecs % 60;
+                    durationString = `${minutes} minutes, ${seconds} seconds`;
+                }
+
+                const submissionData = {
+                    email: state.userEmail,
+                    startTime: state.startTime,
+                    endTime: state.endTime,
+                    duration: durationString,
+                    answers: state.answers
+                };
+                
+                const form = document.getElementById('g-sheet-form');
+                const dataInput = document.getElementById('submission-data-input');
+                
+                form.action = GOOGLE_APP_SCRIPT_URL;
+                dataInput.value = JSON.stringify(submissionData);
+                
+                iframe.dataset.submitted = 'true';
+                form.submit();
+            };
+
+            const proceedToNextQuestion = () => {
+                const currentIndex = state.currentQuestionIndex;
+                const currentQuestion = questions[currentIndex];
+                const currentQuestionNumber = currentQuestion.number;
+
+                const nextIndex = currentIndex + 1;
+                if (nextIndex >= questions.length) {
+                    state.endTime = new Date().toISOString();
+                    state.currentView = 'end';
+                    renderView();
+                    submitResults(); 
+                    return;
+                }
+                
+                if (currentQuestionNumber === SECTION_BREAKS[1] || currentQuestionNumber === SECTION_BREAKS[2]) {
+                    state.currentQuestionIndex++;
+                    const nextSection = getCurrentSection(currentQuestionNumber) + 1;
+                    showInstructions(nextSection);
+                    return;
+                }
+                
+                state.currentQuestionIndex = nextIndex;
+                state.currentView = 'question';
+                renderView();
+            };
+
+            const handleBack = () => {
+                if (state.currentFollowUpOf) {
+                    state.currentFollowUpOf = null;
+                    renderView();
+                    return;
+                }
+
+                if (state.currentQuestionIndex === 0) return;
+                
+                // If we are on an instruction screen, the index points to the *next* question.
+                // So decrementing once takes us to the previous question's index.
+                state.currentQuestionIndex--;
+                
+                // Always go back to a question view.
+                state.currentView = 'question';
+                renderView();
+            };
+            
+            const handleRestart = (goToLogin = true) => {
+                state.answers = {};
+                state.currentQuestionIndex = 0;
+                state.currentFollowUpOf = null;
+                state.userEmail = null;
+                state.startTime = null;
+                state.endTime = null;
+                localStorage.removeItem(STORAGE_KEY);
+                emailInput.value = '';
+                emailInput.disabled = false;
+                if (goToLogin) {
+                    state.currentView = 'login';
+                    renderView();
+                }
+            };
+            
+            const handleLangChange = (e) => {
+                const newLang = e.target.dataset.lang;
+                if (newLang && newLang !== state.lang) {
+                    state.lang = newLang;
+                    saveState();
+                    updateUIText();
+                }
+            };
+
+            const handleChoiceSelection = (e) => {
+                if (!e.target.matches('input[type="radio"]')) return;
+
+                const question = questions[state.currentQuestionIndex];
+                let advance = false;
+                
+                if (state.currentFollowUpOf) {
+                    const mainQuestionNumber = state.currentFollowUpOf;
+                    const answerKey = mainQuestionNumber + '-followup';
+                    const selectedValue = e.target.value;
+                    
+                    state.answers[answerKey] = selectedValue;
+                    state.currentFollowUpOf = null;
+                    advance = true;
+
+                } else {
+                    const selectedValue = parseInt(e.target.value, 10);
+                    state.answers[question.number] = selectedValue;
+                    
+                    if (question.followUp && selectedValue > 0) {
+                        setTimeout(() => {
+                            state.currentFollowUpOf = question.number;
+                            renderView();
+                        }, 350);
+                    } else {
+                        if (question.followUp) {
+                            delete state.answers[question.number + '-followup'];
+                        }
+                        advance = true;
+                    }
+                }
+                
+                saveState();
+                
+                if (advance) {
+                    setTimeout(() => {
+                        proceedToNextQuestion();
+                    }, 350);
+                }
+            };
+
+            const handleDownloadCSV = () => {
+                const t = uiTranslations[state.lang];
+                
+                const escapeCsvCell = (cell) => {
+                    if (cell === null || cell === undefined) {
+                        return '';
+                    }
+                    const strCell = String(cell);
+                    if (strCell.includes(',') || strCell.includes('"') || strCell.includes('\n')) {
+                        return `"${strCell.replace(/"/g, '""')}"`;
+                    }
+                    return strCell;
+                };
+                
+                let durationString = 'N/A';
+                if (state.startTime && state.endTime) {
+                    const start = new Date(state.startTime);
+                    const end = new Date(state.endTime);
+                    const diffMs = end - start;
+                    const diffSecs = Math.floor(diffMs / 1000);
+                    const minutes = Math.floor(diffSecs / 60);
+                    const seconds = diffSecs % 60;
+                    durationString = `${minutes} minutes, ${seconds} seconds`;
+                }
+                
+                let csvContent = `Email,${escapeCsvCell(state.userEmail || 'N/A')}\n`;
+                csvContent += `Start Time,${escapeCsvCell(state.startTime ? new Date(state.startTime).toLocaleString() : 'N/A')}\n`;
+                csvContent += `End Time,${escapeCsvCell(state.endTime ? new Date(state.endTime).toLocaleString() : 'N/A')}\n`;
+                csvContent += `Total Duration,${escapeCsvCell(durationString)}\n`;
+                csvContent += '\n';
+
+                const headers = [t.summaryQNum, t.summaryQuestion, t.summaryAnswer, t.summaryValue];
+                csvContent += headers.join(',') + '\n';
+
+                questions.forEach(q => {
+                    // Main question
+                    const mainAnswerValue = state.answers[q.number];
+                    if (mainAnswerValue !== undefined) {
+                        const answerData = findAnswerData(q.cat, mainAnswerValue);
+                        const row = [q.number, q.q[state.lang], answerData.text, answerData.value];
+                        csvContent += row.map(escapeCsvCell).join(',') + '\n';
+                    }
+
+                    // Follow-up question
+                    const followUpAnswerValue = state.answers[q.number + '-followup'];
+                    if (q.followUp && followUpAnswerValue !== undefined) {
+                        const answerData = findAnswerData(q.followUp.cat, followUpAnswerValue);
+                        const row = [`${q.number}.1`, q.followUp.q[state.lang], answerData.text, answerData.value];
+                        csvContent += row.map(escapeCsvCell).join(',') + '\n';
+                    }
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", "assessment_results.csv");
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            };
+
+            // --- EVENT LISTENERS ---
+            loginButton.addEventListener('click', handleLogin);
+            startButton.addEventListener('click', handleStart);
+            backButton.addEventListener('click', handleBack);
+            restartButton.addEventListener('click', handleRestart);
+            
+            nextButtonSlider.addEventListener('click', proceedToNextQuestion);
+            langButtons.forEach(btn => btn.addEventListener('click', handleLangChange));
+            choicesContainer.addEventListener('change', handleChoiceSelection);
+            downloadCsvButton.addEventListener('click', handleDownloadCSV);
+
+            // --- INITIALIZATION ---
+            loadState();
+
+            // Check for email in URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const emailFromUrl = urlParams.get('email');
+
+            if (emailFromUrl) {
+                // A URL with an email parameter always forces a fresh start.
+                handleRestart(false); // Clear old state but don't go to login view
+                state.userEmail = emailFromUrl;
+                emailInput.value = emailFromUrl;
+                emailInput.disabled = true;
+                showInstructions(1, false);
+                state.currentView = 'instruction';
+
+            } else if (state.userEmail && state.currentQuestionIndex > 0) {
+                // If we loaded saved data with progress, resume from there.
+                emailInput.value = state.userEmail;
+                emailInput.disabled = true; // Lock the email for this session
+                state.currentView = 'question';
+            } else {
+                // Otherwise, default to the login screen.
+                state.currentView = 'login';
+            }
+            
+            updateUIText();
+            renderView();
+        });
+    </script>
+</body>
+</html>
+
